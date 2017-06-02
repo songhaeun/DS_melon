@@ -2,137 +2,163 @@
 #include<malloc.h>
 #define BLACK 0
 #define RED 1
+
 typedef struct RBnode {
 	int val, color;
-	struct RBnode *left;
-	struct RBnode *right;
-	struct RBnode *parent;
+	RBnode *left;
+	RBnode *right;
+	RBnode *parent;
+	RBnode(int newval) {
+		val = newval;
+		left = right = parent = NULL;
+	}
 }rbnode;
-rbnode*node_alloc(int newval) {
-	rbnode*self = (rbnode*)malloc(sizeof(rbnode));
-	self->val = newval;
-	self->left = NULL;  
-	self->right = NULL;
-	return self;
-}//노드초기상태(자리찾아가기전)
-
-typedef struct RBroot {
-	struct RBnode *root;
-}rbroot;//루트 자리 만들기
-rbroot* root_alloc() {
-	rbroot* self = (rbroot*)malloc(sizeof(rbroot));
-	self->root = NULL;
-	return self;
-}//루트가리키는 포인터
-
-typedef struct RBnil {
-	struct RBroot *nil;
-}rbnil;//닐노드만들기
-rbnil*nil_alloc(){
-	rbnil*self = (rbnil*)malloc(sizeof(rbnil));
-	self->nil = NULL;
-	return self;
-}//루트가리키는 닐노드 +맨마지막 자식들한테도 연결해줘야됨
-
-void leftrotation(rbnode**tree, rbnode**ttree) {
-	rbnode *newtree = (*ttree)->right;
-	(*ttree)->right = newtree->left;
-	if ((*ttree)->right != NULL) //!=nil로 책은레프트
-		(*ttree)->right->parent = (*ttree);//책레프트
-	newtree->parent = (*ttree)->parent;
-	if ((*ttree)->parent == NULL)
-		(*tree) = newtree;
-	else if ((*ttree) == (*ttree)->parent->left)
-		(*ttree)->parent->left = newtree;
-	else
-		(*ttree)->parent->right = newtree;
-	newtree->left = (*ttree);
-	(*ttree)->parent = newtree;
+typedef struct RBtree {
+	rbnode *root;
+	void leftrotation(rbnode *&, rbnode*&);
+	void rightrotation(rbnode *&, rbnode*&);
+	void rbfixup(rbnode *&, rbnode*&);
+	RBtree() {
+		root = NULL;
+	}
+	void insert(int newval);
+	void print();
+	void inorder();
+}rbtree;
+void inorderhelper(rbnode *node) {
+	if (node == NULL)
+		return;
+	inorderhelper(node->left);
+	printf("%d[%d]", node->val, node->color);
+	inorderhelper(node->right);
+}
+rbnode *bstinsert(rbnode*tree, rbnode *ttree) {
+	if (tree == NULL)
+		return ttree;
+	if (ttree->val < tree->val) {
+		tree->left = bstinsert(tree->left, ttree);
+		tree->left->parent = tree;
+	}
+	else if (ttree->val >tree->val) {
+		tree->right = bstinsert(tree->right, ttree);
+		tree->right->parent = tree;
+	}
+	return tree;
 }
 
-void rightrotation(rbnode**tree, rbnode**ttree) {
-	rbnode*newtree = (*ttree)->left;
-	(*ttree)->right = newtree->left;
-	if ((*ttree)->right != NULL)
-		(*ttree)->right->parent = (*ttree);
-	newtree->parent = (*ttree)->parent;
-	if ((*ttree)->parent == NULL)
-		(*tree) = newtree;
-	else if ((*ttree) == (*ttree)->parent->left)
-		(*ttree)->parent->left = newtree;
+void leftrotation(rbnode*&tree, rbnode*&ttree) {
+	rbnode *newtree = ttree->right;
+	ttree->right = newtree->left;
+	if (ttree->right != NULL) //!=nil로 책은레프트
+		ttree->right->parent = ttree;//책레프트
+	newtree->parent = ttree->parent;
+	if (ttree->parent == NULL)
+		tree = newtree;
+	else if (ttree == ttree->parent->left)
+		ttree->parent->left = newtree;
 	else
-		(*ttree)->parent->right = newtree;
-	newtree->left = (*ttree);
-	(*ttree)->parent = newtree;
+		ttree->parent->right = newtree;
+	newtree->left = ttree;
+	ttree->parent = newtree;
 }
-
-void rbfixup(rbnode **tree, rbnode**ttree) {
+void rightrotation(rbnode*&tree, rbnode*&ttree) {
+	rbnode*newtree = ttree->left;
+	ttree->right = newtree->left;
+	if (ttree->right != NULL)
+		ttree->right->parent = ttree;
+	newtree->parent = ttree->parent;
+	if (ttree->parent == NULL)
+		tree = newtree;
+	else if (ttree == ttree->parent->left)
+		ttree->parent->left = newtree;
+	else
+		ttree->parent->right = newtree;
+	newtree->left = ttree;
+	ttree->parent = newtree;
+}
+void rbfixup(rbnode *&tree, rbnode*&ttree) {
 	rbnode *parent = NULL;
 	rbnode *gparent = NULL;
-	while ((ttree != tree) && ((*ttree)->color != BLACK) && ((*ttree)->parent->color == RED)) {
-		parent = (*ttree)->parent;
-		gparent = (*ttree)->parent->parent;
+	while ((ttree != tree) && (ttree->color != BLACK) && (ttree->parent->color == RED)) {
+		parent = ttree->parent;
+		gparent = ttree->parent->parent;
 		if (parent == gparent->right) {
 			rbnode*uncle = gparent->right;
 			if (uncle != NULL && uncle->color == RED) {
 				gparent->color = RED;
 				parent->color = BLACK;
 				uncle->color = BLACK;
-				(*ttree) = gparent;
+				ttree = gparent;
 			}
 			else {
-				if ((*ttree) == parent->right) {
-					rightrotation(tree, &parent);
-					(*ttree) = parent;
-					parent = (*ttree)->parent;
+				if (ttree == parent->right) {
+					rightrotation(tree, parent);
+					ttree = parent;
+					parent = ttree->parent;
 				}
-				leftrotation(tree, &gparent);
+				leftrotation(tree, gparent);
 				int tmp = parent->color;
 				parent->color = gparent->color;
 				gparent->color = tmp;
 				//swap(parent->color, gparent->color);
-				(*ttree) = parent;
+				ttree = parent;
+			}
+		}
+		else {
+			rbnode *uncle = gparent->left;
+			if ((uncle != NULL) && (uncle->color == RED)) {
+				gparent->color = RED;
+				parent->color = BLACK;
+				uncle->color = BLACK;
+				ttree = gparent;
+			}
+			else {
+				if (ttree == parent->left) {
+					rightrotation(tree, parent);
+					ttree = parent;
+					parent = ttree->parent;
+				}
+				leftrotation(tree, gparent);
+				int tmp = parent->color;
+				parent->color = gparent->color;
+				gparent->color = tmp;
+				ttree = parent;
 			}
 		}
 	}
-	(*tree)->color = BLACK;
+	tree->color = BLACK;
 }
-
-rbnode *bstinsert(rbnode**tree, rbnode **ttree) {
-	if (tree == NULL)
-		return (*ttree);
-	if ((*ttree)->val < (*tree)->val) {
-		(*tree)->left = bstinsert(&(*tree)->left, &(*ttree));
-		(*tree)->left->parent = (*tree);
-	}
-	else if ((*ttree)->val >(*tree)->val) {
-		(*tree)->right = bstinsert(&(*tree)->right, &(*ttree));
-		(*tree)->right->parent = (*tree);
-	}
-	return (*tree);
-}
-
 void rbinsert(int newval) {
-	rbnode *newtree = node_alloc(newval);
-	rbnode *newroot;
+	rbnode *newtree = new rbnode(newval);
+	rbnode *newroot=  NULL;
 
-	newroot = bstinsert(&newroot, &newtree);
-	rbfixup(&newroot, &newtree);
+	newroot = bstinsert(newroot, newtree);
+	rbfixup(newroot, newtree);
 }
-void rbprint(rbroot **root, rbnode **tree, int level) {
-	if ((*tree)->right == NULL)
-		rbprint(&(*root), &(*tree)->right, level + 1);
+/*void rbprint(rbtree *&root, rbnode *&tree, int level) {
+	if (tree->right == NULL)
+		rbprint(root, tree->right, level + 1);
 	for (int i = 0; i < level; i++) 
 		printf(" ");
-	printf("%d %s\n", &(*tree)->val, &(*tree)->color);
-	if ((*tree)->left == NULL)
-		rbprint(&(*root), &(*tree)->left, level + 1);
-
+	printf("%d [%s]\n", tree->val, tree->color);
+	if (tree->left == NULL)
+		rbprint(root, tree->left, level + 1);
+	printf("뿌엑");
+}*/
+void rbprint( rbtree * root, rbnode *&tree, int level) {
+	if (tree->right == NULL)
+		rbprint( root,tree->right, level + 1);
+	for (int i = 0; i < level; i++)
+		printf(" ");
+	printf("%d [%s]\n", tree->val, tree->color);
+	if (tree->left == NULL)
+		rbprint(root, tree->left, level + 1);
+	printf("뿌엑");
 }
 
 int main(void) {
 	printf("ff");
-	rbroot *newroot = root_alloc();
+	RBtree tree;
 	printf("gg");
 	rbinsert(1);
 	rbinsert(2);
@@ -144,7 +170,9 @@ int main(void) {
 	rbinsert(11);
 	rbinsert(14);
 	printf("hh");
-	rbprint(&newroot, &newroot->root, 0);
+	inorderhelper((&tree)->root);
+	printf("jj");
+	rbprint(&tree,(&tree)->root, 0);
 }
 
 /*void rb_insert(rbroot* self, rbnode* tree, rbnode* n) {
