@@ -144,7 +144,7 @@ void rbinsert(int newval) {
 	if (tree->left == NULL)
 		rbprint(root, tree->left, level + 1);
 	printf("»Ñ¿¢");
-}*/
+}¸ÞÀÎ¿¡¼­ treeÇØ°á¾ÈµÊ*/
 void rbprint( rbtree * root, rbnode *&tree, int level) {
 	if (tree->right == NULL)
 		rbprint( root,tree->right, level + 1);
@@ -172,7 +172,7 @@ int main(void) {
 	printf("hh");
 	inorderhelper((&tree)->root);
 	printf("jj");
-	rbprint(&tree,(&tree)->root, 0);
+	rbprint((&tree),(&tree)->root, 0);
 }
 
 /*void rb_insert(rbroot* self, rbnode* tree, rbnode* n) {
