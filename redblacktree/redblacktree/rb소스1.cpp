@@ -1,33 +1,155 @@
 #include<stdio.h>
 #include<malloc.h>
+#define BLACK 0
+#define RED 1
 typedef struct RBnode {
 	int val, color;
 	struct RBnode *left;
 	struct RBnode *right;
 	struct RBnode *parent;
 }rbnode;
-
 rbnode*node_alloc(int newval) {
 	rbnode*self = (rbnode*)malloc(sizeof(rbnode));
 	self->val = newval;
-	self->left = NULL;
+	self->left = NULL;  
 	self->right = NULL;
 	return self;
-}
+}//노드초기상태(자리찾아가기전)
 
 typedef struct RBroot {
 	struct RBnode *root;
-}rbroot;
-
+}rbroot;//루트 자리 만들기
 rbroot* root_alloc() {
 	rbroot* self = (rbroot*)malloc(sizeof(rbroot));
 	self->root = NULL;
 	return self;
+}//루트가리키는 포인터
+
+typedef struct RBnil {
+	struct RBroot *nil;
+}rbnil;//닐노드만들기
+rbnil*nil_alloc(){
+	rbnil*self = (rbnil*)malloc(sizeof(rbnil));
+	self->nil = NULL;
+	return self;
+}//루트가리키는 닐노드 +맨마지막 자식들한테도 연결해줘야됨
+
+void leftrotation(rbnode**tree, rbnode**ttree) {
+	rbnode *newtree = (*ttree)->right;
+	(*ttree)->right = newtree->left;
+	if ((*ttree)->right != NULL) //!=nil로 책은레프트
+		(*ttree)->right->parent = (*ttree);//책레프트
+	newtree->parent = (*ttree)->parent;
+	if ((*ttree)->parent == NULL)
+		(*tree) = newtree;
+	else if ((*ttree) == (*ttree)->parent->left)
+		(*ttree)->parent->left = newtree;
+	else
+		(*ttree)->parent->right = newtree;
+	newtree->left = (*ttree);
+	(*ttree)->parent = newtree;
 }
 
-void rb_insert(rbroot* self, rbnode* tree, rbnode* n) {
+void rightrotation(rbnode**tree, rbnode**ttree) {
+	rbnode*newtree = (*ttree)->left;
+	(*ttree)->right = newtree->left;
+	if ((*ttree)->right != NULL)
+		(*ttree)->right->parent = (*ttree);
+	newtree->parent = (*ttree)->parent;
+	if ((*ttree)->parent == NULL)
+		(*tree) = newtree;
+	else if ((*ttree) == (*ttree)->parent->left)
+		(*ttree)->parent->left = newtree;
+	else
+		(*ttree)->parent->right = newtree;
+	newtree->left = (*ttree);
+	(*ttree)->parent = newtree;
+}
+
+void rbfixup(rbnode **tree, rbnode**ttree) {
+	rbnode *parent = NULL;
+	rbnode *gparent = NULL;
+	while ((ttree != tree) && ((*ttree)->color != BLACK) && ((*ttree)->parent->color == RED)) {
+		parent = (*ttree)->parent;
+		gparent = (*ttree)->parent->parent;
+		if (parent == gparent->right) {
+			rbnode*uncle = gparent->right;
+			if (uncle != NULL && uncle->color == RED) {
+				gparent->color = RED;
+				parent->color = BLACK;
+				uncle->color = BLACK;
+				(*ttree) = gparent;
+			}
+			else {
+				if ((*ttree) == parent->right) {
+					rightrotation(tree, &parent);
+					(*ttree) = parent;
+					parent = (*ttree)->parent;
+				}
+				leftrotation(tree, &gparent);
+				int tmp = parent->color;
+				parent->color = gparent->color;
+				gparent->color = tmp;
+				//swap(parent->color, gparent->color);
+				(*ttree) = parent;
+			}
+		}
+	}
+	(*tree)->color = BLACK;
+}
+
+rbnode *bstinsert(rbnode**tree, rbnode **ttree) {
+	if (tree == NULL)
+		return (*ttree);
+	if ((*ttree)->val < (*tree)->val) {
+		(*tree)->left = bstinsert(&(*tree)->left, &(*ttree));
+		(*tree)->left->parent = (*tree);
+	}
+	else if ((*ttree)->val >(*tree)->val) {
+		(*tree)->right = bstinsert(&(*tree)->right, &(*ttree));
+		(*tree)->right->parent = (*tree);
+	}
+	return (*tree);
+}
+
+void rbinsert(int newval) {
+	rbnode *newtree = node_alloc(newval);
+	rbnode *newroot;
+
+	newroot = bstinsert(&newroot, &newtree);
+	rbfixup(&newroot, &newtree);
+}
+void rbprint(rbroot **root, rbnode **tree, int level) {
+	if ((*tree)->right == NULL)
+		rbprint(&(*root), &(*tree)->right, level + 1);
+	for (int i = 0; i < level; i++) 
+		printf(" ");
+	printf("%d %s\n", &(*tree)->val, &(*tree)->color);
+	if ((*tree)->left == NULL)
+		rbprint(&(*root), &(*tree)->left, level + 1);
+
+}
+
+int main(void) {
+	printf("ff");
+	rbroot *newroot = root_alloc();
+	printf("gg");
+	rbinsert(1);
+	rbinsert(2);
+	rbinsert(7); 
+	rbinsert(5); 
+	rbinsert(4); 
+	rbinsert(8); 
+	rbinsert(15);
+	rbinsert(11);
+	rbinsert(14);
+	printf("hh");
+	rbprint(&newroot, &newroot->root, 0);
+}
+
+/*void rb_insert(rbroot* self, rbnode* tree, rbnode* n) {
 	if (self->root == NULL)
-		self->root = n;
+		self->root = n;//루트가 비어있으니까 초기상태인경우 걍 값만 ㅍㅍ넣어주면됨 호로로로로로로롤 
 	else if (n->val < tree->val) {
 		if (tree->left == NULL)
 			tree->left = n;
@@ -63,7 +185,7 @@ void rb_inorder(rbroot* self, rbnode* tree) {
 }
 
 void main() {
-	rbroot *rbr = root_alloc();
+	rbroot *rbr = root_alloc();//root만들기
 	rb_insert(rbr, rbr->root, node_alloc(21));
 	rb_insert(rbr, rbr->root, node_alloc(12));
 	rb_insert(rbr, rbr->root, node_alloc(34));
@@ -73,4 +195,4 @@ void main() {
 	rb_print(rbr, rbr->root, 0);
 	rb_inorder(rbr, rbr->root);
 	printf("\n");
-}
+}*/
