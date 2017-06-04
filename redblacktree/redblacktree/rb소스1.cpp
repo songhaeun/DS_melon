@@ -26,7 +26,7 @@ node *rbti_search(int key, node *base, size_t *num) {
 	}
 	return s;
 }
-node *rotate(int key, node *pivot, node *base){
+node *rotate(int key, node *pivot, node *base) {
 	//회전 돌려돌려
 	node *child, *gchild; //자식이랑 손자
 	if (key < pivot->key || pivot == base) //아들은 어디로갈까 결정
@@ -97,26 +97,28 @@ node *rbti_insert(int key, node *base/*, size_t *num*/) {
 	base->left->red = 0;
 	return t;
 }
-void rbtr_list(node *p, void(*fprt)(void*, int)) {//나무프린트
-	int i;
-	static int x = 0;
-	if (p != NULL) {
-		x += 2;
-		rbtr_list(p->right, fprt);
-		for (i = 2; i < x; i++)
-			printf(" ");
-		fprt(p + 1, p ->red);
-		rbtr_list(p->left, fprt);
-		x -= 2;
-	}
+void rbtr_list(node *p, int level) {//나무프린트
+	if (p->right != NULL)
+		rbtr_list(p->right, level + 1);
+	for (int i = 0; i < level; i++)
+		printf("      ");
+	printf("%d[%d]\n", p->key, p->red);
+	if (p->left != NULL)
+		rbtr_list(p->left, level + 1);
 
 }
+
 int main(void) {
 	node *head = NULL;
+	init_tree(&head);
 	rbti_insert(10, head);
 	rbti_insert(20, head);
 	rbti_insert(15, head);
 	rbti_insert(11, head);
+	rbti_insert(3, head);
+	rbti_insert(44, head);
+	rbti_insert(1, head);
+	rbti_insert(8, head);
 	rbti_insert(31, head);
 	rbtr_list(head, 0);
 
