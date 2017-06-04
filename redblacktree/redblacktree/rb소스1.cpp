@@ -19,24 +19,38 @@ RBNodePtr self = (RBNodePtr)malloc(sizeof(struct RBNode));
 	self->parent = NULL;
 	return self;
 }
-void insertRBNode(RBNodePtr root, RBNodePtr newval);//데이터 삽입
+
+typedef struct RBRoot* RBRootPtr;
+struct RBRoot {
+	RBNodePtr root;
+};
+
+RBRootPtr rbroot_alloc() {
+	RBRootPtr self = (RBRootPtr)malloc(sizeof(struct RBRoot));
+	self->root = NULL;
+	return self;
+}
+
+
+void insertRBNode(RBRootPtr tree, RBNodePtr root, RBNodePtr newval);//데이터 삽입
 void leftrotation(RBNodePtr root, RBNodePtr newval);
 void rightrotation(RBNodePtr root, RBNodePtr newval);
 void fixup(RBNodePtr y, RBNodePtr root, RBNodePtr newval);
 void print(RBNodePtr root, int level);//출력
 //void inorder(RBNodePtr root);
 int main(void) {
-	RBNodePtr root = NULL;
+	//RBNodePtr root = NULL;
+	RBRootPtr rbr = rbroot_alloc();
 	printf("11");
-	insertRBNode(root, rbnode_alloc(10));
-	insertRBNode(root, rbnode_alloc(20));
-	insertRBNode(root, rbnode_alloc(30));
-	print(root, 0);
+	insertRBNode(rbr, rbr->root, rbnode_alloc(10));//(root,(10))
+	insertRBNode(rbr, rbr->root, rbnode_alloc(20));
+	insertRBNode(rbr, rbr->root, rbnode_alloc(30));
+	print(rbr->root, 0);
 	//inorder(root);
 }
-void insertRBNode(RBNodePtr root, RBNodePtr newval) {
+void insertRBNode(RBRootPtr tree, RBNodePtr root, RBNodePtr newval) {
 	RBNodePtr y = NULL;
-	RBNodePtr x = root;
+	RBNodePtr x = tree->root;
 	while (x != NULL) {
 		y = x;
 		if (newval->val < x->val)
@@ -46,7 +60,7 @@ void insertRBNode(RBNodePtr root, RBNodePtr newval) {
 	}
 	newval->parent = y;
 	if (y == NULL)
-		root = newval;
+		tree->root = newval;
 	else if (newval->val < y->val)
 		y->left = newval;
 	else
@@ -54,9 +68,9 @@ void insertRBNode(RBNodePtr root, RBNodePtr newval) {
 	newval->left = NULL;
 	newval->right = NULL;
 	newval->color = RED;
-	fixup(y,root, newval);
+	fixup(y,tree->root, newval);
 }
-void fixup(RBNodePtr y, RBNodePtr root, RBNodePtr newval) {
+void fixup(RBNodePtr y, RBRootPtr tree, RBNodePtr newval) {//RBNodePtr root
 	while (newval->parent->color == RED) {
 		if (newval->parent == newval->parent->parent->left) {
 			y = newval->parent->parent->right;
@@ -68,12 +82,12 @@ void fixup(RBNodePtr y, RBNodePtr root, RBNodePtr newval) {
 			}
 			else if (newval == newval->parent->right) {
 				newval = newval->parent;
-				leftrotation(root, newval);
+				leftrotation(tree->root, newval);
 			}
 			else {
 				newval->parent->color = BLACK;
 				newval->parent->parent->color = RED;
-				rightrotation(root, newval->parent->parent);
+				rightrotation(tree->root, newval->parent->parent);
 			}
 		}
 		else {
@@ -86,18 +100,18 @@ void fixup(RBNodePtr y, RBNodePtr root, RBNodePtr newval) {
 			}
 			else if (newval == newval->parent->left) {
 				newval = newval->parent;
-				rightrotation(root, newval);
+				rightrotation(tree->root, newval);
 			}
 			else {
 				newval->parent->color = BLACK;
 				newval->parent->parent->color = RED;
-				leftrotation(root, newval->parent->parent);
+				leftrotation(tree->root, newval->parent->parent);
 			}
 		}
 	}
-	root->color = BLACK;
+	tree->root->color = BLACK;
 }
-void leftrotation(RBNodePtr root, RBNodePtr newval) {
+void leftrotation(RBNodePtr root, RBNodePtr newval) {//RBRootPtr tree
 	RBNodePtr y = newval->right;
 	newval->right = y->left;
 	if (y->left != NULL)
@@ -112,7 +126,7 @@ void leftrotation(RBNodePtr root, RBNodePtr newval) {
 	y->left = newval;
 	newval->parent = y;
 }
-void rightrotation(RBNodePtr root, RBNodePtr newval) {
+void rightrotation(RBNodePtr root, RBNodePtr newval) {//RBRootPtr tree
 	RBNodePtr y = newval->left;
 	newval->left = y->right;
 	if (y->right != NULL)
@@ -136,6 +150,18 @@ void print(RBNodePtr root, int level) {
 	if (root->left != NULL)
 		print(root->left, level + 1);
 }
+
+
+/*#include <stdio.h>
+#include <malloc.h>
+struct TreeNode {
+	int key;
+	TreeNode *LNode;
+	TreeNode *RNode;
+};
+struct Tree {
+	TreeNode *Root;//이런식으로 루트는 줘야하는거 같음! 책바꾼거 루트주기
+};*/
 
  
 
