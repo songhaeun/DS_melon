@@ -1,125 +1,226 @@
-#include <stdio.h>
-#include <malloc.h>
+#include<stdio.h>
+#include<malloc.h>
+#define BLACK 1;
+#define RED 2;
 
-typedef struct _node {
-	struct _node *left;
-	struct _node *right;
-	int red; //노드색 빨강이면 1, 검정이면 0
-	int key;
-}node;
-void init_tree(node **p) {
-	//초기화 나무시작점 생성
-	*p = (node*)malloc(sizeof(node));
-	(*p)->left = NULL;
-	(*p)->right = NULL;
-	(*p)->red = 0;//초기색은 검정
+typedef struct RBNode *RBNodePtr;
+struct RBNode{
+	int val, colour;
+	RBNodePtr left, right, parent;
+}rbnode;
+typedef struct RBRoot *RBRootPtr;
+struct RBRoot {
+	RBNodePtr root;
+	RBNodePtr nil;
+}rbroot;
+
+RBNodePtr node_alloc(int newval);
+RBRootPtr rbroot_alloc();
+RBRootPtr make_nil(RBRootPtr rbroot);
+void rbroot_insert(RBRootPtr self, RBNodePtr tree, RBNodePtr nil, RBNodePtr n);
+void rbnode_insert(RBRootPtr self, RBNodePtr tree, RBNodePtr nil, RBNodePtr n);
+RBNodePtr tree_search(RBRootPtr self, RBNodePtr tree, int newval);
+RBNodePtr tree_minimum(RBRootPtr self, RBNodePtr tree);
+void transplant(RBRootPtr self, RBNodePtr tree, RBNodePtr n);
+void rbnode_delete(RBRootPtr self, RBNodePtr tree, RBNodePtr n);
+void leftrotation(RBRootPtr self, RBNodePtr tree);
+void rightrotation(RBRootPtr self, RBNodePtr tree);
+
+RBNodePtr node_alloc(int newval) {
+	RBNodePtr tree = (RBNodePtr)malloc(sizeof(struct rbnode));
+	tree->val = newval;
+	tree->left = NULL;
+	tree->right = NULL;
+	tree->parent = NULL;
+	return tree;
 }
-node *rbti_search(int key, node *base, size_t *num) {
-	//검색함수
-	node *s;
-	s = base->left;//s가뿌리
-	while (key != s->key && s != NULL) {
-		if (key, s->key)//작으면 왼쪽으로
-			s = s->left;
-		else
-			s = s->right;
+RBRootPtr rbroot_alloc() {
+	RBRootPtr root = (RBRootPtr)malloc(sizeof(struct rbroot));
+	root->root = NULL;
+	return root;
+}
+RBRootPtr make_nil(RBRootPtr rbroot) {
+	rbroot->nil = (RBNodePtr)malloc(sizeof(rbnode));
+	rbroot->nil->val = NULL;
+	rbroot->nil->left = NULL;
+	rbroot->nil->right = NULL;
+	rbroot->nil->colour = BLACK;
+	rbroot->root = rbroot->nil;
+	return rbroot;
+}
+
+void rbroot_insert(RBRootPtr self, RBNodePtr tree, RBNodePtr nil, RBNodePtr n) {
+	if (tree == nil) {//트리가 비어있는 경우 
+		self->root = n;
+		n->parent = nil;
 	}
-	return s;
-}
-node *rotate(int key, node *pivot, node *base) {
-	//회전 돌려돌려
-	node *child, *gchild; //자식이랑 손자
-	if (key < pivot->key || pivot == base) //아들은 어디로갈까 결정
-		child = pivot->left;
-	else
-		child = pivot->right;
-	if (key < child->key) { //손자방향 결정
-		gchild = child->left; //왼쪽회전
-		child->left = gchild->right;
-		gchild->right = child;
+	else if (n->val < tree->val) {
+		n->parent = tree;
+		if (tree->left = nil) {
+			tree->left = n;
+			n->parent = tree;
+		}
+		else
+			rbroot_insert(self, tree->left, nil, n);
 	}
 	else {
-		gchild = child->right; //오른쪽회전
-		child->right = gchild->left;
-		gchild->left = child;
-	}
-	if (key < pivot->key || pivot == base)//축에손자연결
-		pivot->left = gchild;
-	else
-		pivot->right = gchild;
-	return gchild;
-}
-node *rbti_insert(int key, node *base/*, size_t *num*/) {
-	node *t, *parent, *gparent, *ggparent; //자기자신 
-	ggparent = gparent = parent = base;
-	t = base->left;
-	while (t != NULL) {
-		if (key == t->key)
-			return NULL; // 이미 같은 값이 있음
-		if (t->left && t->right && t->left->red && t->right->red) {
-			t->red = 1; //색깔바꾸기
-			t->left->red = t->right->red = 0;
-			if (parent->red) {//부모가 빨강이면 회전해야됨
-				gparent->red = 1;
-				if (key < gparent->key != key < parent->key)
-					parent = rotate(key, gparent, base);//LR RL회전
-				t = rotate(key, ggparent, base);//LL RR회전
-				t->red = 0;
-			}
-			base->left->red = 0; //뿌리노드는 검정으로
+		n->parent = tree;
+		if (tree->right = nil) {
+			tree->right = n;
+			n->parent = tree;
 		}
-		ggparent = gparent;
-		gparent = parent;
-		parent = t;
-		if (key < t->key)//어디로들어갈까~~찾기
-			t = t->left;
 		else
-			t = t->right;
+			rbroot_insert(self, tree->right, nil, n);
 	}
-	if ((t = (node*)malloc(sizeof(node))) == NULL)//노드생성
-		return NULL;
-	t->key = key;
-	t->left = NULL;
-	t->right = NULL;
-	if (key < parent->key || parent == base) //삽입
-		parent->left = t;
+	n->left = nil;
+	n->right = nil;
+}
+void rbnode_insert(RBRootPtr self, RBNodePtr tree, RBNodePtr nil, RBNodePtr n) {
+	rbroot_insert(self, tree, nil, n);
+	n->colour = RED;
+	RBNodePtr temp;//temp로 노드 만듬
+	while ((n != tree) && n->parent->colour == RED) {
+		if (n->parent == n->parent->parent->left) {
+			temp = n->parent->parent->right;
+			if (temp->colour == RED) {
+				n->parent->colour = BLACK;
+				temp->colour = BLACK;
+				n->parent->parent->colour = RED;
+				n = n->parent->parent;
+			}
+			else {
+				if (n == n->parent->right) {
+					n = n->parent;
+					leftrotation(self, n);
+				}
+				n->parent->colour = BLACK;
+				n->parent->parent->colour = RED;
+				rightrotation(self, n->parent->parent);
+			}
+		}
+		else {
+			temp = n->parent->parent->left;
+			if (temp->colour == RED) {
+				n->parent->colour = BLACK;
+				temp->colour = BLACK;
+				n->parent->parent->colour = RED;
+				n = n->parent->parent;
+			}
+			else {
+				if (n == n->parent->left) {
+					n = n->parent;
+					rightrotation(self, n);
+				}
+				n->parent->colour = BLACK;
+				n->parent->parent->colour = RED;
+				leftrotation(self, n->parent->parent);
+			}
+		}
+	}
+	self->root->colour = BLACK;
+}
+
+RBNodePtr tree_search(RBRootPtr self, RBNodePtr tree, int newval) {
+	if (tree == NULL || newval == tree->val)
+		return tree;
+	if (newval < tree->val)
+		return tree_search(self, tree->left, newval);
 	else
-		parent->right = t;
-	//(*num)++; //자료수증가, 이거는지워도될듯
-	t->red = 1;//새로 삽입되는 노드는 빨강
-	if (parent->red) {//부모도빨강이면 회전해야됨
-		gparent->red = 1;
-		if (key < gparent->key != key < parent->key)//LR RL회전
-			parent = rotate(key, gparent, base);
-		t = rotate(key, ggparent, base);//LL RR회전
-		t->red = 0;
+		return tree_search(self, tree->right, newval);
+}
+RBNodePtr tree_minimum(RBRootPtr self, RBNodePtr tree) {
+	while (tree->left != NULL) {
+		tree = tree->left;
 	}
-	base->left->red = 0;
-	return t;
+	return tree;
 }
-void rbtr_list(node *p, int level) {//나무프린트
-	if (p->right != NULL)
-		rbtr_list(p->right, level + 1);
+
+void transplant(RBRootPtr self, RBNodePtr tree, RBNodePtr n) {
+	if (tree->parent == NULL)
+		self->root = n;
+	else if (tree == tree->parent->left)
+		tree->parent->left = n;
+	else
+		tree->parent->right = n;
+	if (n != NULL)
+		n->parent = tree->parent;
+
+}
+void rbnode_delete(RBRootPtr self, RBNodePtr tree, RBNodePtr n);
+void leftrotation(RBRootPtr self, RBNodePtr tree) {
+	RBNodePtr y = tree->right;
+	tree->right = y->left;
+	if (y->left != self->nil)
+		y->left->parent = tree;
+	y->parent = tree->parent;
+	if (tree->parent == self->nil)
+		self->root = y;
+	else if (tree == tree->parent->left)
+		tree->parent->right = y;
+	else
+		tree->parent->right = y;
+	y->left = tree;
+	tree->parent = y;
+}
+void rightrotation(RBRootPtr self, RBNodePtr tree) {
+	RBNodePtr y = tree->left;
+	tree->left = y->right;
+	if (y->right != self->nil)
+		y->right->parent = tree;
+	y->parent = tree->parent;
+	if (tree->parent == self->nil)
+		self->root = y;
+	else if (tree == tree->parent->right)
+		tree->parent->right = y;
+	else
+		tree->parent->left = y;
+	y->right = tree;
+	tree->parent = y;
+}
+void print(RBRootPtr self, RBNodePtr tree, int level) {
+	if (tree->right != self->nil)
+		print(self, tree->right, level + 1);
 	for (int i = 0; i < level; i++)
-		printf("      ");
-	printf("%d[%d]\n", p->key, p->red);
-	if (p->left != NULL)
-		rbtr_list(p->left, level + 1);
-
+		printf("         ");
+	printf("%d[%d]\n", tree->val, tree->colour);
+	if (tree->left != self->nil)
+		print(self, tree->left, level + 1);
+}
+void inorder(RBRootPtr self, RBNodePtr tree) {
+	if (tree == self->nil)
+		return;
+	else{
+		inorder(self, tree->left);
+		printf("%d[%d]->", tree->val, tree->colour);
+		inorder(self, tree->right);
+	}
 }
 
-int main(void) {
-	node *head = NULL;
-	init_tree(&head);
-	rbti_insert(10, head);
-	rbti_insert(20, head);
-	rbti_insert(15, head);
-	rbti_insert(11, head);
-	rbti_insert(3, head);
-	rbti_insert(44, head);
-	rbti_insert(1, head);
-	rbti_insert(8, head);
-	rbti_insert(31, head);
-	rbtr_list(head, 0);
+void main() {
+	FILE *fp;
+	int data;
+	int *arr = NULL;
+	int size = 0;
+
+	fp = fopen("C:\\my0531\\test.txt", "r");
+	while (fscanf(fp, "%d", &data) != EOF) {//
+		printf("%d\n", data);//파일에있는걸받아오고
+		arr = (int*)realloc(arr, sizeof(int)*(size + 1));
+		arr[size] = data;
+		size++;//배열에 하나씩 넣어줌
+	}
+	fclose(fp);
+	for (int i = 0; i < size; i++) {
+		printf("[%d]\n", arr[i]);//배열에 하나씩 제대로 들어갔는지 확인
+	}
+	RBRootPtr root = rbroot_alloc();
+	make_nil(root);
+	for (int i = 0; i < size; i++) {
+		rbnode_insert(root, root->root, root->nil, node_alloc(arr[i]));
+	}
+	print(root,root->root, 0);
+	inorder(root, root->root);
+
+
 
 }
