@@ -210,8 +210,7 @@ int rbtdelete(int key, node *base) {
 
 	if (del == NULL) {
 		key = key*(-1);
-		printf("%d - 이런건 없음\n", key);
-
+		printf("%d - miss 이런건 없음\n", key);
 		return 0;
 	}
 	if (del->right&&del->left) {
@@ -255,7 +254,7 @@ void inorder(node *base) {
 		return;
 	else {
 		inorder(base->left);
-		printf("%d ", base->key);
+		printf("%d[%d] ", base->key,base->colour);
 		inorder(base->right);
 	}
 }
@@ -313,6 +312,8 @@ int main(void) {
 	int *arr = NULL;
 	int size = 0;
 	int total = 0;
+	int gotoinsert = 0;
+	int gotodelete = 0;
 
 
 	fp = fopen("C:\\my0531\\test.txt", "r");
@@ -332,11 +333,12 @@ int main(void) {
 	for (int i = 0; i < size; i++) {
 		if (arr[i] > 0) {
 			rbtinsert(arr[i], head);
+			gotoinsert++;
 		}
 		else if (arr[i] < 0) {
 			arr[i] = (-1)*arr[i];
 			rbtdelete(arr[i], head);
-			;
+			gotodelete++;
 		}
 		else {
 
@@ -348,11 +350,14 @@ int main(void) {
 			printf("\n");
 			printf("bh: %d", blackHeight(head) - 1);
 			printf("\n");
+			printf("insert: %d", gotoinsert);
 			printf("\n");
+			printf("delete: %d", gotodelete);
 			printf("\n");
 			printf("\n");
 			printf("\n");
 			printf("nb: %d", checkcolor(head) - 1);
+			
 
 
 		}
