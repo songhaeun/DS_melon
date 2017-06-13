@@ -394,7 +394,7 @@ void inorder(rbptr rbroot, nodeptr tree) {
 	}
 	else {
 		inorder(rbroot, tree->left);
-		printf("%d[%c] ->", tree->data, tree->color == 1 ? 'B' : 'R');
+		printf("%d[%c]\n", tree->data, tree->color == 1 ? 'B' : 'R');
 		inorder(rbroot, tree->right);
 	}
 }
