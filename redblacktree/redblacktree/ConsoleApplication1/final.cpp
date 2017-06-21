@@ -398,6 +398,115 @@ void inorder(rbptr rbroot, nodeptr tree) {
 		inorder(rbroot, tree->right);
 	}
 }
+void findprevnext(rbptr rbroot, nodeptr tree, int forthis) {
+	nodeptr tmp = tree;
+	if (tree == rbroot->nil)
+		return;
+	else if (search(rbroot, forthis) == 1) 
+	{
+		if (tree->data == forthis) 
+		{
+			if (tree->left == rbroot->nil) 
+			{
+				if(tree->parent->data < forthis)
+					printf("ÀÌÀü²¨%d", tree->parent->data);
+				else 
+					printf("ÀÌÀü²¨NULL");
+
+			}
+			else 
+			{
+				tree = tree->left;
+				if (tree->right == rbroot->nil)
+					printf("ÀÌÀü²¨%d", tree->data);
+				else if (tree->right != rbroot->nil) 
+				{
+					while (tree->right != rbroot->nil)
+						tree = tree->right;
+					printf("ÀÌÀü²¨%d", tree->data);
+				}
+			}
+			printf(" %d ", forthis);
+			tree = tmp;
+			if (tree->right == rbroot->nil) 
+			{
+				if (tree->parent->data > forthis)
+					printf("´ÙÀ½²¨%d\n", tree->parent->data);
+				else
+					printf("´ÙÀ½²¨NULL\n");
+			}
+			else 
+			{
+				tree = tree->right;
+				if (tree->left == rbroot->nil)
+					printf("´ÙÀ½²¨%d\n", tree->data);
+				else if(tree->left != rbroot->nil) 
+				{
+					while (tree->left != rbroot->nil)
+						tree = tree->left;
+					printf("´ÙÀ½²¨%d\n", tree->data);
+				}
+			}
+		}
+		else if (tree->data > forthis)
+			findprevnext(rbroot, tree->left, forthis);
+		else if (tree->data < forthis)
+			findprevnext(rbroot, tree->right, forthis);
+	}
+	else if (search(rbroot, forthis) == 0)
+	{
+		if (tmp->data < forthis) 
+		{
+			while (tmp->right != rbroot->nil) 
+			{
+				tmp = tmp->right;
+			}
+			if (tmp->data < forthis) 
+			{
+				printf("ÀÌÀü²¨%d", tmp->data);
+				printf("Áß°£²¨NULL");
+				printf("´ÙÀ½²¨NULL\n");
+			}
+			else if (tmp->data > forthis) 
+			{
+				if (tmp->left != rbroot->nil)
+				{
+					while (tmp->left != rbroot->nil)
+						tmp = tmp->left;
+					printf("ÀÌÀü²¨%d", tmp->data);
+					printf("Áß°£²¨NULL");
+					printf("´ÙÀ½²¨%d\n", tmp->parent->data);
+				}
+				else if (tmp->left == rbroot->nil) 
+				{
+					printf("ÀÌÀü²¨%d", tmp->parent->data);
+					printf("Áß°£²¨NULL");
+					printf("´ÙÀ½²¨%d\n", tmp->data);
+				}
+				
+			}
+		}
+		else if (tmp->data > forthis) 
+		{	
+			while (tmp->left != rbroot->nil) 
+			{
+				tmp = tmp->left;
+			}
+			if (tmp->data > forthis) 
+			{
+				printf("ÀÌÀü²¨NULL");
+				printf("Áß°£²¨NULL");
+				printf("´ÙÀ½²¨%d\n", tmp->data);
+			}
+			else if(tmp->data < forthis) 
+			{
+				printf("ÀÌÀü²¨%d", tmp->data);
+				printf("Áß°£²¨NULL");
+				printf("´ÙÀ½²¨%d\n", tmp->parent->data);
+			}
+		}
+	}
+}
 
 int checkcolor(rbptr rbroot, nodeptr tree) {
 	int check = 0;
@@ -528,12 +637,19 @@ void main(int argc, char **argv) {
 	for (int i = 0; i < newsize; i++) {
 		if (search(rbt, newarr[i]) == 1)
 		{
-			printf("%dÃ£À½\n", newarr[i]);
+			//printf("%dÃ£À½\n", newarr[i]);
+			findprevnext(rbt, rbt->root, newarr[i]);
+
 
 		}
-		else if(search(rbt,newarr[i])==0 && newarr[i]!=0)
-			printf("%d¸øÃ£À½\n", newarr[i]);
+		else if (search(rbt, newarr[i]) == 0 && newarr[i] != 0) 
+		{
+			 //printf("%d¸øÃ£À½\n", newarr[i]);
+			 findprevnext(rbt, rbt->root, newarr[i]);
+		
+		}
 		else if (newarr[i] == 0)break;
 	}
+
 	return;
 }
